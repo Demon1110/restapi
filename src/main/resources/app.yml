@@ -1,0 +1,10 @@
+server.port: 8081
+
+solon.app:
+  name: 'demo-app'
+  group: 'demo'
+
+
+#liteflow配置
+liteflow:
+  rule-source: "config/flow.el.xml"
