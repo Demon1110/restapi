@@ -2,8 +2,11 @@ package com.cary.core.restapi.controller;
 
 import cn.hutool.core.map.MapUtil;
 import com.cary.core.restapi.entity.User;
-import com.cary.core.restapi.service.QingLongService;
-import org.noear.solon.annotation.*;
+import com.cary.core.restapi.service.VikaService;
+import org.noear.solon.annotation.Body;
+import org.noear.solon.annotation.Controller;
+import org.noear.solon.annotation.Inject;
+import org.noear.solon.annotation.Mapping;
 import org.noear.solon.core.handle.Context;
 import org.noear.solon.core.handle.Result;
 
@@ -15,7 +18,7 @@ import java.util.Map;
 public class IndexController {
 
     @Inject
-    QingLongService qingLongService;
+    VikaService vikaService;
 
     @Mapping("/jd")
     public Result jd(@Body Map<String, Object> body) throws IOException {
@@ -23,8 +26,10 @@ public class IndexController {
         List<String> cookies = MapUtil.get(body, "cookies", List.class);
         String cookieStr = String.join(";", cookies);
         System.out.println(cookieStr);
-        return Result.succeed(qingLongService.updateEnv("JD_COOKIE", cookieStr));
+        return Result.succeed(vikaService.updateField("recWShPpT20z8","多行文本", cookieStr));
     }
+
+
 
     @Mapping("/test")
     public Result test(User user, Context ctx) {

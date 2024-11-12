@@ -2,6 +2,7 @@ package com.cary.core.restapi.service;
 
 import cn.hutool.cache.Cache;
 import cn.hutool.cache.CacheUtil;
+import cn.hutool.crypto.SecureUtil;
 import org.noear.snack.ONode;
 import org.noear.solon.annotation.Component;
 import org.noear.solon.net.http.HttpUtils;
@@ -13,7 +14,7 @@ public class QingLongService {
     private String serverUrl = "http://192.168.195.133:5700/open";
     private String client_id = "5XxMo4QSC_d9";
     private String client_secret = "7-K_iv-_qMZqnvmlXzLb0BOq";
-    private Cache<String, String> cache = CacheUtil.newFIFOCache(10, 1000 * 60 * 60 * 24);
+    public static Cache<String, String> cache = CacheUtil.newFIFOCache(10, 1000 * 60 * 60 * 24);
 
     public String login() throws IOException {
         return cache.get("token", () -> {
@@ -26,6 +27,12 @@ public class QingLongService {
     }
 
     public String updateEnv(String key, String value) throws IOException {
+        String md5 = SecureUtil.md5(value);
+        if (cache.containsKey(md5)) {
+            return cache.get(md5);
+        }else{
+            cache.put(md5, "1");
+        }
         String url = serverUrl + "/envs";
         ONode body = ONode.newObject();
         body.set("id", 1);
