@@ -41,17 +41,17 @@
             <groupId>org.noear</groupId>
             <artifactId>solon-scheduling-simple</artifactId>
         </dependency>
-        <dependency>
-            <groupId>org.noear</groupId>
-            <artifactId>liteflow-solon-plugin</artifactId>
-            <version>3.0.1</version>
-            <exclusions>
-                <exclusion>
-                    <artifactId>hutool-core</artifactId>
-                    <groupId>cn.hutool</groupId>
-                </exclusion>
-            </exclusions>
-        </dependency>
+        <!-- <dependency>
+             <groupId>org.noear</groupId>
+             <artifactId>liteflow-solon-plugin</artifactId>
+             <version>3.0.1</version>
+             <exclusions>
+                 <exclusion>
+                     <artifactId>hutool-core</artifactId>
+                     <groupId>cn.hutool</groupId>
+                 </exclusion>
+             </exclusions>
+         </dependency>-->
         <dependency>
             <groupId>org.projectlombok</groupId>
             <artifactId>lombok</artifactId>
@@ -59,7 +59,12 @@
         </dependency>
         <dependency>
             <groupId>cn.hutool</groupId>
-            <artifactId>hutool-all</artifactId>
+            <artifactId>hutool-cache</artifactId>
+            <version>5.8.32</version>
+        </dependency>
+        <dependency>
+            <groupId>cn.hutool</groupId>
+            <artifactId>hutool-crypto</artifactId>
             <version>5.8.32</version>
         </dependency>
         <dependency>

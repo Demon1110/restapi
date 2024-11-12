@@ -2,6 +2,7 @@ package com.cary.core.restapi.service;
 
 import cn.hutool.cache.Cache;
 import cn.hutool.cache.CacheUtil;
+import cn.hutool.core.date.DateUtil;
 import cn.hutool.crypto.SecureUtil;
 import org.noear.snack.ONode;
 import org.noear.solon.annotation.Component;
@@ -11,9 +12,9 @@ import java.io.IOException;
 
 @Component
 public class QingLongService {
-    private String serverUrl = "http://192.168.195.133:5700/open";
-    private String client_id = "5XxMo4QSC_d9";
-    private String client_secret = "7-K_iv-_qMZqnvmlXzLb0BOq";
+    private final String serverUrl = "http://192.168.195.133:5700/open";
+    private final String client_id = "5XxMo4QSC_d9";
+    private final String client_secret = "7-K_iv-_qMZqnvmlXzLb0BOq";
     public static Cache<String, String> cache = CacheUtil.newFIFOCache(10, 1000 * 60 * 60 * 24);
 
     public String login() throws IOException {
@@ -30,7 +31,7 @@ public class QingLongService {
         String md5 = SecureUtil.md5(value);
         if (cache.containsKey(md5)) {
             return cache.get(md5);
-        }else{
+        } else {
             cache.put(md5, "1");
         }
         String url = serverUrl + "/envs";
@@ -38,7 +39,7 @@ public class QingLongService {
         body.set("id", 1);
         body.set("name", key);
         body.set("value", value);
-        body.set("remarks", "server env update");
+        body.set("remarks", "server env update" + DateUtil.now());
         String content = HttpUtils.http(url).header("Authorization", "Bearer " + login()).bodyJson(body.toJson()).put();
         return content;
     }

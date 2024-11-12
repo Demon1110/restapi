@@ -1,6 +1,5 @@
 package com.cary.core.restapi.service;
 
-import cn.hutool.http.HttpUtil;
 import org.junit.jupiter.api.Test;
 import org.noear.snack.ONode;
 import org.noear.solon.net.http.HttpUtils;
@@ -9,8 +8,6 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
-
-import static org.junit.jupiter.api.Assertions.*;
 
 class VikaServiceTest {
 
@@ -34,8 +31,8 @@ class VikaServiceTest {
 
 
     public static void main(String[] args) throws IOException {
-        String body= HttpUtil.get("https://api.vika.cn/fusion/v1/datasheets/dstvpyxSRujo9BzNr1/records?pageSize=100&maxRecords=1000&pageNum=1&sort=&fields=&filterByFormula=&cellFormat=json&fieldKey=name");
-        System.out.println(body);
+//        String body= HttpUtil.get("https://api.vika.cn/fusion/v1/datasheets/dstvpyxSRujo9BzNr1/records?pageSize=100&maxRecords=1000&pageNum=1&sort=&fields=&filterByFormula=&cellFormat=json&fieldKey=name");
+//        System.out.println(body);
         String s = HttpUtils.http("https://api.vika.cn/fusion/v1/datasheets/dstvpyxSRujo9BzNr1/records").header("Authorization", "Bearer uskSenkuMRMoQs17QMHOtD8").get();
         System.out.println(s);
     }
