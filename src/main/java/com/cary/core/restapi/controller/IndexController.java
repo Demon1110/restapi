@@ -3,6 +3,8 @@ package com.cary.core.restapi.controller;
 import cn.hutool.core.map.MapUtil;
 import com.cary.core.restapi.entity.User;
 import com.cary.core.restapi.service.VikaService;
+import com.cary.core.restapi.task.TaskJob;
+import org.noear.solon.Solon;
 import org.noear.solon.annotation.Body;
 import org.noear.solon.annotation.Controller;
 import org.noear.solon.annotation.Inject;
@@ -30,6 +32,11 @@ public class IndexController {
     }
 
 
+    @Mapping("/test2")
+    public Result test2() throws IOException {
+        Solon.context().getBean(TaskJob.class).execute();
+        return Result.succeed();
+    }
 
     @Mapping("/test")
     public Result test(User user, Context ctx) {
