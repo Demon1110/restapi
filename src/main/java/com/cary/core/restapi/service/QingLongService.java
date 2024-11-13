@@ -40,6 +40,7 @@ public class QingLongService {
         body.set("name", key);
         body.set("value", value);
         body.set("remarks", "server env update" + DateUtil.now());
+        System.out.println("更新环境变量：" + body.toJson());
         String content = HttpUtils.http(url).header("Authorization", "Bearer " + login()).bodyJson(body.toJson()).put();
         return content;
     }

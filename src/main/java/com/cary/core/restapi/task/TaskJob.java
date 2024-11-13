@@ -34,7 +34,7 @@ public class TaskJob {
         if (optional.isPresent()) {
             ONode data = optional.get();
             System.out.println(data);
-            qingLongService.updateEnv("JD_COOKIE",data.toString());
+            qingLongService.updateEnv("JD_COOKIE", data.getString());
         }
     }
 }
