@@ -20,7 +20,7 @@ public class TaskJob {
     @Inject
     QingLongService qingLongService;
 
-    @Scheduled(cron = "0 0 0,6,12,18 * * ?")
+    @Scheduled(cron = "0 0 0/2 * * ?")
     public void execute() throws IOException {
         System.out.println("TaskJob execute");
         Map<String, Object> params = new HashMap<>();
