@@ -15,7 +15,7 @@ public class QingLongService {
     private final String serverUrl = "http://192.168.195.133:5700/open";
     private final String client_id = "5XxMo4QSC_d9";
     private final String client_secret = "7-K_iv-_qMZqnvmlXzLb0BOq";
-    public static Cache<String, String> cache = CacheUtil.newFIFOCache(10, 1000 * 60 * 60 * 24);
+    public static Cache<String, String> cache = CacheUtil.newFIFOCache(10, 1000 * 60 * 60);
 
     public String login() throws IOException {
         return cache.get("token", () -> {
