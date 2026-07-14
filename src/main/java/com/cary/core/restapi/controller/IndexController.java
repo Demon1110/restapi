@@ -1,5 +1,6 @@
 package com.cary.core.restapi.controller;
 
+import cn.hutool.core.io.FileUtil;
 import cn.hutool.core.map.MapUtil;
 import com.cary.core.restapi.entity.User;
 import com.cary.core.restapi.service.VikaService;
@@ -42,5 +43,12 @@ public class IndexController {
     public Result test(User user, Context ctx) {
         System.out.println(user);
         return Result.succeed();
+    }
+
+    @Mapping("/collect")
+    public Result collect(@Body String body) {
+        System.out.println(body);
+        FileUtil.appendUtf8String(body + "\n", "D://1.txt");
+        return Result.succeed("收集成功");
     }
 }
