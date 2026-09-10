@@ -1,25 +1,33 @@
 package com.cary.core.restapi.task;
 
+import com.cary.core.restapi.service.DingTalkService;
 import com.cary.core.restapi.service.StockCollectService;
+import lombok.extern.slf4j.Slf4j;
+import org.noear.solon.Solon;
 import org.noear.solon.annotation.Component;
 import org.noear.solon.annotation.Inject;
 import org.noear.solon.scheduling.annotation.Scheduled;
 
 import java.io.IOException;
-import java.util.HashMap;
 import java.util.Map;
 
+@Slf4j
 @Component
 public class StockCollectJob {
 
     @Inject
     StockCollectService stockCollectService;
+    @Inject
+    DingTalkService dingTalkService;
 
-    @Scheduled(cron = "0 0 0/2 * * ?")
+    @Scheduled(cron = "0 0 9,12 * * ?")
     public void execute() throws IOException {
-        System.out.println("TaskJob execute");
-        Map<String, Object> params = new HashMap<>();
-        params.put("pageNum", "1");
-        params.put("recordIds", "recWShPpT20z8");
+        log.info("TaskJob execute");
+        Map<String, Object> map = stockCollectService.analyzeStockList("a", "day", "normal");
+        String text = stockCollectService.analyzeText(map);
+        String dingtalkWebhookUrl = Solon.cfg()
+                .getProperty("dingtalk:webhook_url", "https://oapi.dingtalk.com/robot/send?access_token=3f7920b69fddec3389c3c71daf91b2128837bcf120d41a991f2210fffa5a2174");
+        boolean result = dingTalkService.sendTextMsg(dingtalkWebhookUrl, text);
+        log.info("DingTalk send result: {}", result);
     }
 }

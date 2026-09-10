@@ -1,54 +1,71 @@
 package com.cary.core.restapi.controller;
 
-import cn.hutool.core.io.FileUtil;
-import cn.hutool.core.map.MapUtil;
-import com.cary.core.restapi.entity.User;
-import com.cary.core.restapi.service.VikaService;
-import com.cary.core.restapi.task.TaskJob;
-import org.noear.solon.Solon;
-import org.noear.solon.annotation.Body;
-import org.noear.solon.annotation.Controller;
-import org.noear.solon.annotation.Inject;
-import org.noear.solon.annotation.Mapping;
-import org.noear.solon.core.handle.Context;
+import cn.hutool.core.convert.Convert;
+import cn.hutool.json.JSONArray;
+import com.cary.core.restapi.service.StockCollectService;
+import org.noear.solon.annotation.*;
 import org.noear.solon.core.handle.Result;
 
 import java.io.IOException;
-import java.util.List;
 import java.util.Map;
 
 @Controller
+@Mapping("/stock")
 public class StockController {
 
     @Inject
-    VikaService vikaService;
+    StockCollectService stockCollectService;
 
-    @Mapping("/jd")
-    public Result jd(@Body Map<String, Object> body) throws IOException {
-        System.out.println(body);
-        List<String> cookies = MapUtil.get(body, "cookies", List.class);
-        String cookieStr = String.join(";", cookies);
-        System.out.println(cookieStr);
-        return Result.succeed(vikaService.updateField("recWShPpT20z8", "多行文本", cookieStr));
+    /**
+     * 获取股票列表
+     *
+     * @param body
+     * @return
+     * @throws IOException
+     */
+    @Mapping("/list")
+    @Post
+    public Result list(@Body Map<String, Object> body) throws IOException {
+        String stockType = Convert.toStr(body.get("stock_type"), "a");
+        String type = Convert.toStr(body.get("type"), "day");
+        String listType = Convert.toStr(body.get("list_type"), "normal");
+        JSONArray topStockList = stockCollectService.getTopStockList(stockType, type, listType);
+        System.out.println(topStockList);
+        return Result.succeed(topStockList);
     }
 
-
-    @Mapping("/test2")
-    public Result test2() throws IOException {
-        Solon.context().getBean(TaskJob.class).execute();
-        return Result.succeed();
+    /**
+     * 获取上一次收集的数据
+     *
+     * @param body
+     * @return
+     * @throws IOException
+     */
+    @Mapping("/last")
+    @Post
+    public Result last(@Body Map<String, Object> body) throws IOException {
+        String stockType = Convert.toStr(body.get("stock_type"), "a");
+        String type = Convert.toStr(body.get("type"), "day");
+        String listType = Convert.toStr(body.get("list_type"), "normal");
+        String last = stockCollectService.getLast(stockType, type, listType);
+        return Result.succeed(last, "收集成功");
     }
 
-    @Mapping("/test")
-    public Result test(User user, Context ctx) {
-        System.out.println(user);
-        return Result.succeed();
+    /**
+     * 获取对比结果
+     *
+     * @param body
+     * @return
+     * @throws IOException
+     */
+    @Mapping("/result")
+    @Post
+    public Result result(@Body Map<String, Object> body) throws IOException {
+        String stockType = Convert.toStr(body.get("stock_type"), "a");
+        String type = Convert.toStr(body.get("type"), "day");
+        String listType = Convert.toStr(body.get("list_type"), "normal");
+        String last = stockCollectService.getLast(stockType, type, listType);
+        return Result.succeed(last, "收集成功");
     }
 
-    @Mapping("/collect")
-    public Result collect(@Body String body) {
-        System.out.println(body);
-        FileUtil.appendUtf8String(body + "\n", "D://1.txt");
-        return Result.succeed("收集成功");
-    }
 }

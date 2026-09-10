@@ -23,7 +23,7 @@ public class DingTalkService {
      * @param content    需要发送的消息
      * @return 发送结果
      */
-    private boolean sendTextMsg(String webhookUrl, String content) {
+    public boolean sendTextMsg(String webhookUrl, String content) {
         return sendTextMsg(webhookUrl, content, null);
     }
 
@@ -35,7 +35,7 @@ public class DingTalkService {
      * @param hookSecret 钉钉webhook密钥
      * @return 发送结果
      */
-    private boolean sendTextMsg(String webhookUrl, String content, String hookSecret) {
+    public boolean sendTextMsg(String webhookUrl, String content, String hookSecret) {
         String hookUrl = webhookUrl;
         // 帮助文档地址：https://open.dingtalk.com/document/development/custom-robots-send-group-messages
         JSONObject body = new JSONObject();
@@ -57,7 +57,29 @@ public class DingTalkService {
         return false;
     }
 
-    private static String getSignature(String secret, String timestamp) {
+    public boolean sendMdMsg(String webhookUrl, String title, String text, String hookSecret) {
+        String hookUrl = webhookUrl;
+        // 帮助文档地址：https://open.dingtalk.com/document/development/custom-robots-send-group-messages
+        JSONObject body = new JSONObject();
+        if (StrUtil.isNotBlank(hookSecret)) {
+            String timestamp = System.currentTimeMillis() + "";
+            String sign = getSignature(hookSecret, timestamp);
+            hookUrl = hookUrl + "&timestamp=" + timestamp + "&sign=" + sign;
+        }
+        System.out.println("Webhook地址: " + hookUrl);
+        body.put("msgtype", "markdown");
+        body.put("markdown", new JSONObject().set("title", title).put("text", text));
+        body.put("at", new JSONObject().put("isAtAll", true));
+        String post = HttpUtil.post(hookUrl, body.toString(), DEFAULT_TIMEOUT);
+        log.error("钉钉机器人发送失败，响应内容: {}", post);
+        JSONObject response = JSONUtil.parseObj(post);
+        if (response != null) {
+            return response.getInt("errcode") == 0;
+        }
+        return false;
+    }
+
+    public static String getSignature(String secret, String timestamp) {
         try {
             String stringToSign = timestamp + "\n" + secret;
             HMac hmac = DigestUtil.hmac(HmacAlgorithm.HmacSHA256, StrUtil.bytes(secret));
