@@ -101,9 +101,9 @@ public class StockCollectService {
      * @return
      */
     public Map<String, Object> analyzeStockList(String stock_type, String type, String list_type) {
-        JSONArray topStockList = this.getTopStockList("a", "day", "normal");
+        JSONArray topStockList = this.getTopStockList(stock_type, type, list_type);
         log.info("Top stock list: {}", topStockList.size());
-        String last = this.getLast("a", "day", "normal");
+        String last = this.getLast(stock_type, type, list_type);
         JSONArray lastList = JSONUtil.parseArray(last);
         log.info("Last stock list: {}", lastList.size());
         Map<String, Object> map = MapUtil.newHashMap();

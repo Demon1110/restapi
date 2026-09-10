@@ -3,6 +3,7 @@ package com.cary.core.restapi.controller;
 import cn.hutool.core.convert.Convert;
 import cn.hutool.json.JSONArray;
 import com.cary.core.restapi.service.StockCollectService;
+import lombok.extern.slf4j.Slf4j;
 import org.noear.solon.annotation.*;
 import org.noear.solon.core.handle.Result;
 
@@ -10,6 +11,7 @@ import java.io.IOException;
 import java.util.Map;
 
 @Controller
+@Slf4j
 @Mapping("/stock")
 public class StockController {
 
@@ -64,8 +66,10 @@ public class StockController {
         String stockType = Convert.toStr(body.get("stock_type"), "a");
         String type = Convert.toStr(body.get("type"), "day");
         String listType = Convert.toStr(body.get("list_type"), "normal");
-        String last = stockCollectService.getLast(stockType, type, listType);
-        return Result.succeed(last, "收集成功");
+        Map<String, Object> map = stockCollectService.analyzeStockList(stockType, type, listType);
+        String text = stockCollectService.analyzeText(map);
+        log.info("Text: {}", text);
+        return Result.succeed(text, "收集成功");
     }
 
 }
