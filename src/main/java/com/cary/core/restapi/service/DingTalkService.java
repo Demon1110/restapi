@@ -49,7 +49,7 @@ public class DingTalkService {
         body.put("text", new JSONObject().put("content", content));
         body.put("at", new JSONObject().put("isAtAll", true));
         String post = HttpUtil.post(hookUrl, body.toString(), DEFAULT_TIMEOUT);
-        log.error("钉钉机器人发送失败，响应内容: {}", post);
+        log.error("钉钉机器人发送成功，响应内容: {}", post);
         JSONObject response = JSONUtil.parseObj(post);
         if (response != null) {
             return response.getInt("errcode") == 0;
@@ -71,7 +71,7 @@ public class DingTalkService {
         body.put("markdown", new JSONObject().set("title", title).put("text", text));
         body.put("at", new JSONObject().put("isAtAll", true));
         String post = HttpUtil.post(hookUrl, body.toString(), DEFAULT_TIMEOUT);
-        log.error("钉钉机器人发送失败，响应内容: {}", post);
+        log.error("钉钉机器人发送成功，响应内容: {}", post);
         JSONObject response = JSONUtil.parseObj(post);
         if (response != null) {
             return response.getInt("errcode") == 0;
