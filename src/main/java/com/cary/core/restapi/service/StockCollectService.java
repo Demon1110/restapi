@@ -148,8 +148,7 @@ public class StockCollectService {
             Integer rate = stockObj.getInt("rate");
             BigDecimal decimal = NumberUtil.div(rate, BigDecimal.valueOf(10000));
             double v = decimal.setScale(2, RoundingMode.HALF_UP).doubleValue();
-            text.append("#### **").append(stockObj.getStr("name")).append("**(").append(stockObj.getStr("code"))
-                    .append(")")
+            text.append("#### **").append(stockObj.getStr("code")).append("** ").append(stockObj.getStr("name"))
                     .append(", 热度:").append(v).append("万\n");
             index++;
             if (index >= size) {
@@ -163,8 +162,7 @@ public class StockCollectService {
             Integer rate = stockObj.getInt("rate");
             BigDecimal decimal = NumberUtil.div(rate, BigDecimal.valueOf(10000));
             double v = decimal.setScale(2, RoundingMode.HALF_UP).doubleValue();
-            text.append("##### **").append(stockObj.getStr("name")).append("**(").append(stockObj.getStr("code"))
-                    .append(")")
+            text.append("#### **").append(stockObj.getStr("code")).append("** ").append(stockObj.getStr("name"))
                     .append(", 热度:").append(v).append("万, 变动:").append(stockObj.getStr("hot_rank_chg"))
                     .append("\n");
             index++;
