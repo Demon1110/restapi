@@ -109,12 +109,19 @@ public class StockCollectService {
         Map<String, Object> map = MapUtil.newHashMap();
         for (int i = 0; i < lastList.size(); i++) {
             JSONObject stock = lastList.getJSONObject(i);
-            map.put(stock.getStr("code"), stock);
+            String code = stock.getStr("code");
+            if (StrUtil.startWith(code, "3")) {
+                continue;
+            }
+            map.put(code, stock);
         }
         List<JSONObject> newStockList = new ArrayList<>();
         for (int i = 0; i < topStockList.size(); i++) {
             JSONObject stock = topStockList.getJSONObject(i);
             String code = stock.getStr("code");
+            if (StrUtil.startWith(code, "3")) {
+                continue;
+            }
             if (!map.containsKey(code)) {
                 newStockList.add(stock);
             }
