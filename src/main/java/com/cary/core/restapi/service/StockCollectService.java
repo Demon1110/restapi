@@ -16,8 +16,10 @@ import cn.hutool.json.JSONUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.noear.solon.annotation.Component;
 
+import java.io.File;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -27,7 +29,9 @@ import java.util.Map;
 public class StockCollectService {
 
     private final String stockCollectUrl = "https://dq.10jqka.com.cn/fuyao/hot_list_data/out/hot_list/v1/stock";
-    private final String fileRoot = "/app/stock/";
+    //    private final String fileRoot = "/app/stock/";
+    private final String fileRoot =
+            Paths.get(System.getProperty("user.dir"), "data", "stock") + File.separator;
     private static String last = "[]";
 
     //查看股票详情的网页：https://m.10jqka.com.cn/stockpage/hs_300093/#&atab=geguNews
@@ -61,15 +65,21 @@ public class StockCollectService {
         StockCollectService stockCollectService = new StockCollectService();
 //        JSONArray topStockList = stockCollectService.getTopStockList("a", "day", "normal");
 //        System.out.println(topStockList);
-        Map<String, Object> map = stockCollectService.analyzeStockList("a", "day", "normal");
+        System.out.println(stockCollectService.fileRoot);
+        /*Map<String, Object> map = stockCollectService.analyzeStockList("a", "day", "normal");
 //        log.info("Map: {}", map);
         String text = stockCollectService.analyzeText(map);
         log.info("Text: {}", text);
 
         DingTalkService dingTalkService = new DingTalkService();
-        String dingtalkWebhookUrl = "https://oapi.dingtalk.com/robot/send?access_token=3f7920b69fddec3389c3c71daf91b2128837bcf120d41a991f2210fffa5a2174";
+        String dingtalkWebhookUrl = System.getenv("DINGTALK_WEBHOOK_URL");
+        if (StrUtil.isBlank(dingtalkWebhookUrl)) {
+            log.warn("DINGTALK_WEBHOOK_URL not configured, skip DingTalk message.");
+            dingtalkWebhookUrl = "https://oapi.dingtalk.com/robot/send?access_token=3f7920b69fddec3389c3c71daf91b2128837bcf120d41a991f2210fffa5a2174";
+//            return;
+        }
         boolean result = dingTalkService.sendMdMsg(dingtalkWebhookUrl, "每日股票分析", text, null);
-        System.out.println("DingTalk result: " + result);
+        System.out.println("DingTalk result: " + result);*/
     }
 
     /**

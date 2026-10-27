@@ -1,6 +1,7 @@
 package com.cary.core.restapi.task;
 
 import cn.hutool.core.date.DateUtil;
+import cn.hutool.core.util.StrUtil;
 import com.cary.core.restapi.service.DingTalkService;
 import com.cary.core.restapi.service.StockCollectService;
 import lombok.extern.slf4j.Slf4j;
@@ -26,8 +27,15 @@ public class StockCollectJob {
         log.info("TaskJob execute");
         Map<String, Object> map = stockCollectService.analyzeStockList("a", "day", "normal");
         String text = stockCollectService.analyzeText(map);
-        String dingtalkWebhookUrl = Solon.cfg()
-                .getProperty("dingtalk:webhook_url", "https://oapi.dingtalk.com/robot/send?access_token=3f7920b69fddec3389c3c71daf91b2128837bcf120d41a991f2210fffa5a2174");
+        String dingtalkWebhookUrl = Solon.cfg().getProperty("dingtalk:webhook_url");
+        if (StrUtil.isBlank(dingtalkWebhookUrl)) {
+            dingtalkWebhookUrl = System.getenv("DINGTALK_WEBHOOK_URL");
+        }
+        if (StrUtil.isBlank(dingtalkWebhookUrl)) {
+            log.warn("DINGTALK_WEBHOOK_URL not configured, skip DingTalk message.");
+            dingtalkWebhookUrl = "https://oapi.dingtalk.com/robot/send?access_token=3f7920b69fddec3389c3c71daf91b2128837bcf120d41a991f2210fffa5a2174";
+//            return;
+        }
         int thisHour = DateUtil.thisHour(true);
         if (thisHour <= 15) {
             boolean result = dingTalkService.sendMdMsg(dingtalkWebhookUrl, "每日股票分析", text, null);
