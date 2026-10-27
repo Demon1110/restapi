@@ -4,6 +4,11 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
+    <groupId>com.cary.core</groupId>
+    <artifactId>restapi</artifactId>
+    <version>1.0.2</version>
+
+
     <parent>
         <groupId>org.noear</groupId>
         <artifactId>solon-parent</artifactId>
@@ -11,9 +16,6 @@
         <relativePath/>
     </parent>
 
-    <groupId>com.cary.core</groupId>
-    <artifactId>restapi</artifactId>
-    <version>3.0.2</version>
 
     <packaging>jar</packaging>
 
