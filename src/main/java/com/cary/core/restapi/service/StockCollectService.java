@@ -69,8 +69,8 @@ public class StockCollectService {
         DingTalkService dingTalkService = new DingTalkService();
 
         String dingtalkWebhookUrl = "https://oapi.dingtalk.com/robot/send?access_token=3f7920b69fddec3389c3c71daf91b2128837bcf120d41a991f2210fffa5a2174";
-        boolean result = dingTalkService.sendMdMsg(dingtalkWebhookUrl, "每日股票分析", text, null);
-        System.out.println("DingTalk result: " + result);
+//        boolean result = dingTalkService.sendMdMsg(dingtalkWebhookUrl, "每日股票分析", text, null);
+//        System.out.println("DingTalk result: " + result);
     }
 
     /**
