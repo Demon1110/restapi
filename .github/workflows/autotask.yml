@@ -31,3 +31,9 @@ jobs:
           echo "Stock data dir: $STOCK_DATA_DIR"
           mkdir -p "$STOCK_DATA_DIR"
           mvn exec:java -Dexec.mainClass="com.cary.core.restapi.service.StockCollectService" -Dexec.args=""
+
+      - name: git add and commit changes
+        run: |
+          git add .
+          git commit -m "Auto task for stock data"
+          git push
