@@ -5,6 +5,9 @@ on:
     - cron: '0 1,4,7,11 * * *'  # 北京时间 9:00, 12:00, 15:00, 19:00 -> UTC
   workflow_dispatch:
 
+permissions:
+  contents: write
+
 jobs:
   stock-analysis:
     runs-on: ubuntu-latest
@@ -34,6 +37,13 @@ jobs:
 
       - name: git add and commit changes
         run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add .
+          # 无数据变更时跳过提交与推送，避免工作流报错
+          if git diff --cached --quiet; then
+            echo "No stock data changes, skip commit and push."
+            exit 0
+          fi
           git commit -m "Auto task for stock data"
           git push

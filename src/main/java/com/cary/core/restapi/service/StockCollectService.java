@@ -65,8 +65,7 @@ public class StockCollectService {
         StockCollectService stockCollectService = new StockCollectService();
 //        JSONArray topStockList = stockCollectService.getTopStockList("a", "day", "normal");
 //        System.out.println(topStockList);
-        System.out.println(stockCollectService.fileRoot);
-        /*Map<String, Object> map = stockCollectService.analyzeStockList("a", "day", "normal");
+        Map<String, Object> map = stockCollectService.analyzeStockList("a", "day", "normal");
 //        log.info("Map: {}", map);
         String text = stockCollectService.analyzeText(map);
         log.info("Text: {}", text);
@@ -79,7 +78,7 @@ public class StockCollectService {
 //            return;
         }
         boolean result = dingTalkService.sendMdMsg(dingtalkWebhookUrl, "每日股票分析", text, null);
-        System.out.println("DingTalk result: " + result);*/
+        System.out.println("DingTalk result: " + result);
     }
 
     /**
