@@ -1,35 +1,89 @@
-# This workflow will build a Java project with Maven, and cache/restore any dependencies to improve the workflow execution time
-# For more information see: https://docs.github.com/en/actions/automating-builds-and-tests/building-and-testing-java-with-maven
+# 自动升级版本 + 自动发布 GitHub Release
+# 触发时机：代码推送到 main 分支时，自动将 pom.xml 版本号 patch+1，
+# 提交版本升级、打 vX.Y.Z 标签、用 Maven 打包，并创建 GitHub Release 附件。
+# 也可通过仓库 Actions 页面手动触发（workflow_dispatch）。
 
-# This workflow uses actions that are not certified by GitHub.
-# They are provided by a third-party and are governed by
-# separate terms of service, privacy policy, and support
-# documentation.
-
-name: Java CI with Maven
+name: Auto Build, Version Bump & Release
 
 on:
   push:
     branches: [ "main" ]
-  pull_request:
-    branches: [ "main" ]
+    # 版本升级提交只改动 pom.xml，命中此过滤，避免工作流自身再触发（GitHub 对 GITHUB_TOKEN 的 push
+    # 本就不重触发工作流，此处再加一层保护）
+    paths-ignore:
+      - 'pom.xml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
 
 jobs:
-  build:
-
+  release:
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v4
-    - name: Set up JDK 17
-      uses: actions/setup-java@v4
-      with:
-        java-version: '17'
-        distribution: 'temurin'
-        cache: maven
-    - name: Build with Maven
-      run: mvn -B package -DskipTests=true --file pom.xml
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: true
 
-    # Optional: Uploads the full dependency graph to GitHub to improve the quality of Dependabot alerts this repository can receive
-    - name: Update dependency graph
-      uses: advanced-security/maven-dependency-submission-action@571e99aab1055c2e71a1e2309b9691de18d6b7d6
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+          cache: maven
+
+      # ---- 1. 自动升级版本号（patch +1）----
+      - name: Bump version
+        id: bump
+        run: |
+          current=$(grep -oPm1 '(?<=<version>)[^<]+(?=</version>)' pom.xml)
+          echo "current=$current"
+
+          # 拆成 major.minor.patch，缺失的段按 0 处理，patch 自增
+          major=$(echo "$current" | cut -d. -f1)
+          minor=$(echo "$current" | awk -F. '{print ($2!="" ? $2 : "0")}')
+          patch=$(echo "$current" | awk -F. '{print ($3!="" ? $3 : "0")}')
+          new="$major.$minor.$((patch+1))"
+          echo "new=$new"
+          echo "NEW_VERSION=$new" >> "$GITHUB_ENV"
+
+          # 只替换本项目版本号（<artifactId>restapi</artifactId> 之后出现的第一个 <version>），
+          # 不影响 parent / 依赖 / 插件版本
+          awk -v nv="$new" '
+            /<artifactId>restapi<\/artifactId>/ { target=1 }
+            target && /<version>/ { sub(/<version>[^<]+<\/version>/, "<version>" nv "</version>"); target=0 }
+            { print }
+          ' pom.xml > pom.xml.tmp && mv pom.xml.tmp pom.xml
+
+          echo "pom version now: $(grep -A1 '<artifactId>restapi</artifactId>' pom.xml | grep '<version>')"
+
+      # ---- 2. 提交版本升级并推送 tag ----
+      - name: Commit version bump and push tag
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          if git diff --quiet -- pom.xml; then
+            echo "No version change to commit."
+          else
+            git add pom.xml
+            git commit -m "chore: bump version to v${{ env.NEW_VERSION }}"
+          fi
+          git push origin main
+          git tag "v${{ env.NEW_VERSION }}"
+          git push origin "v${{ env.NEW_VERSION }}"
+
+      # ---- 3. Maven 打包 ----
+      - name: Build with Maven
+        run: mvn -B package -DskipTests --file pom.xml
+
+      # ---- 4. 自动创建 GitHub Release ----
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: "v${{ env.NEW_VERSION }}"
+          name: "v${{ env.NEW_VERSION }}"
+          generate_release_notes: true
+          files: target/restapi.jar
