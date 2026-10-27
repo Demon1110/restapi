@@ -33,7 +33,8 @@ jobs:
         run: |
           echo "Stock data dir: $STOCK_DATA_DIR"
           mkdir -p "$STOCK_DATA_DIR"
-          mvn exec:java -Dexec.mainClass="com.cary.core.restapi.service.StockCollectService" -Dexec.args=""
+          # 先 compile 再 exec:java（exec:java 不会自动编译，否则 target/classes 为空会 ClassNotFound）
+          mvn -B compile exec:java -Dexec.mainClass="com.cary.core.restapi.service.StockCollectService" -Dexec.args=""
 
       - name: git add and commit changes
         run: |
