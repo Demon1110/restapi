@@ -1,17 +1,11 @@
 # 自动升级版本 + 自动发布 GitHub Release
-# 触发时机：代码推送到 main 分支时，自动将 pom.xml 版本号 patch+1，
-# 提交版本升级、打 vX.Y.Z 标签、用 Maven 打包，并创建 GitHub Release 附件。
-# 也可通过仓库 Actions 页面手动触发（workflow_dispatch）。
+# 触发时机：仅手动触发（在仓库 Actions 页面点击 Run workflow）。
+# 运行时自动将 pom.xml 版本号 patch+1，提交版本升级、打 vX.Y.Z 标签、
+# 用 Maven 打包，并创建 GitHub Release 附件。
 
 name: Auto Build, Version Bump & Release
 
 on:
-  push:
-    branches: [ "main" ]
-    # 版本升级提交只改动 pom.xml，命中此过滤，避免工作流自身再触发（GitHub 对 GITHUB_TOKEN 的 push
-    # 本就不重触发工作流，此处再加一层保护）
-    paths-ignore:
-      - 'pom.xml'
   workflow_dispatch:
 
 permissions:
