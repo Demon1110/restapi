@@ -1,7 +1,8 @@
 # 自动升级版本 + 自动发布 GitHub Release
 # 触发时机：仅手动触发（在仓库 Actions 页面点击 Run workflow）。
-# 运行时自动将 pom.xml 版本号 patch+1，提交版本升级、打 vX.Y.Z 标签、
-# 用 Maven 打包，并创建 GitHub Release 附件。
+# 运行时自动将 pom.xml 版本号 patch+1，先执行 Maven 打包，
+# 把 target/restapi.jar 复制到 releases/，再提交版本升级和 JAR，
+# 推送 vX.Y.Z 标签，最后自动创建 GitHub Release。
 
 name: Auto Build, Version Bump & Release
 
@@ -36,7 +37,6 @@ jobs:
           current=$(grep -oPm1 '(?<=<version>)[^<]+(?=</version>)' pom.xml)
           echo "current=$current"
 
-          # 拆成 major.minor.patch，缺失的段按 0 处理，patch 自增
           major=$(echo "$current" | cut -d. -f1)
           minor=$(echo "$current" | awk -F. '{print ($2!="" ? $2 : "0")}')
           patch=$(echo "$current" | awk -F. '{print ($3!="" ? $3 : "0")}')
@@ -44,8 +44,6 @@ jobs:
           echo "new=$new"
           echo "NEW_VERSION=$new" >> "$GITHUB_ENV"
 
-          # 只替换本项目版本号（<artifactId>restapi</artifactId> 之后出现的第一个 <version>），
-          # 不影响 parent / 依赖 / 插件版本
           awk -v nv="$new" '
             /<artifactId>restapi<\/artifactId>/ { target=1 }
             target && /<version>/ { sub(/<version>[^<]+<\/version>/, "<version>" nv "</version>"); target=0 }
@@ -54,30 +52,39 @@ jobs:
 
           echo "pom version now: $(grep -A1 '<artifactId>restapi</artifactId>' pom.xml | grep '<version>')"
 
-      # ---- 2. 提交版本升级并推送 tag ----
+      # ---- 2. Maven 打包 ----
+      - name: Build with Maven
+        run: mvn -B package -DskipTests --file pom.xml
+
+      # ---- 3. 把 JAR 放到 releases 目录 ----
+      - name: Copy JAR to releases directory
+        run: |
+          mkdir -p releases
+          cp target/restapi.jar releases/restapi.jar
+
+      # ---- 4. 提交版本升级并推送 tag ----
       - name: Commit version bump and push tag
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          if git diff --quiet -- pom.xml; then
+
+          git add pom.xml releases/restapi.jar
+
+          if git diff --cached --quiet; then
             echo "No version change to commit."
           else
-            git add pom.xml
             git commit -m "chore: bump version to v${{ env.NEW_VERSION }}"
           fi
-          git push origin main
-          git tag "v${{ env.NEW_VERSION }}"
-          git push origin "v${{ env.NEW_VERSION }}"
 
-      # ---- 3. Maven 打包 ----
-      - name: Build with Maven
-        run: mvn -B package -DskipTests --file pom.xml
+          git push origin HEAD:${GITHUB_REF_NAME:-main}
+          git tag -f "v${{ env.NEW_VERSION }}"
+          git push origin "v${{ env.NEW_VERSION }}" --force
 
-      # ---- 4. 自动创建 GitHub Release ----
+      # ---- 5. 自动创建 GitHub Release ----
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
           tag_name: "v${{ env.NEW_VERSION }}"
           name: "v${{ env.NEW_VERSION }}"
           generate_release_notes: true
-          files: target/restapi.jar
+          files: releases/restapi.jar
