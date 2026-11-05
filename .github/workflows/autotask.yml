@@ -2,8 +2,7 @@ name: Auto Task for Stock Analysis
 
 on:
   schedule:
-   # - cron: '0 1,4,7,11 * * *'  # 北京时间 9:00, 12:00, 15:00, 19:00 -> UTC
-    - cron: '0 1,11 * * *'  # 北京时间 9:00, 12:00, 15:00, 19:00 -> UTC
+    - cron: '0 1,4,7,11 * * *'  # 北京时间 9:00, 12:00, 15:00, 19:00 -> UTC
   workflow_dispatch:
 
 permissions:
@@ -14,7 +13,7 @@ jobs:
     runs-on: ubuntu-latest
     env:
       STOCK_DATA_DIR: ${{ github.workspace }}/data/stock
-      JAR_PATH: ${{ github.workspace }}/releases/restapi.jar
+
     steps:
       - uses: actions/checkout@v4
 
@@ -23,32 +22,26 @@ jobs:
         with:
           java-version: '17'
           distribution: 'temurin'
+          cache: maven
 
       - name: Prepare stock data directory
         run: mkdir -p "$STOCK_DATA_DIR"
 
-      - name: Run StockCollectService from local jar
+      - name: Run StockCollectService main method
         env:
           DINGTALK_WEBHOOK_URL: ${{ secrets.DINGTALK_WEBHOOK_URL }}
         run: |
           echo "Stock data dir: $STOCK_DATA_DIR"
-          echo "Jar path: $JAR_PATH"
-          if [ ! -f "$JAR_PATH" ]; then
-            echo "ERROR: $JAR_PATH not found!"
-            exit 1
-          fi
-          # ========== 二选一 ==========
-          # 【方案A：SpringBoot 可执行jar，推荐】
-          # java -jar "$JAR_PATH"
-          # 【方案B：普通jar包，指定主类，注释上面一行打开下面】
-          java -cp "$JAR_PATH" com.cary.core.restapi.service.StockCollectService
+          mkdir -p "$STOCK_DATA_DIR"
+          # 先 compile 再 exec:java（exec:java 不会自动编译，否则 target/classes 为空会 ClassNotFound）
+          mvn -B compile exec:java -Dexec.mainClass="com.cary.core.restapi.service.StockCollectService" -Dexec.args=""
 
       - name: git add and commit changes
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add .
-          # 无数据变更时跳过提交与推送
+          # 无数据变更时跳过提交与推送，避免工作流报错
           if git diff --cached --quiet; then
             echo "No stock data changes, skip commit and push."
             exit 0
