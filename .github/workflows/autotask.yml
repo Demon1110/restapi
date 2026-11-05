@@ -2,7 +2,7 @@ name: Auto Task for Stock Analysis
 
 on:
   schedule:
-    - cron: '0 1,4,7,11 * * *'  # 北京时间 9:00, 12:00, 15:00, 19:00 -> UTC
+    - cron: '0 1,4,7,11 * * *'  # UTC -> 北京时间 9:00,12:00,15:00,19:00
   workflow_dispatch:
 
 permissions:
@@ -13,7 +13,7 @@ jobs:
     runs-on: ubuntu-latest
     env:
       STOCK_DATA_DIR: ${{ github.workspace }}/data/stock
-
+      MAVEN_REPO: ~/.m2/repository
     steps:
       - uses: actions/checkout@v4
 
@@ -22,7 +22,28 @@ jobs:
         with:
           java-version: '17'
           distribution: 'temurin'
-          cache: maven
+          # 这里关掉内置 maven cache，我们自己用 actions/cache 精细控制
+          cache: none
+
+      # ========== Maven 依赖缓存 ==========
+      - name: Cache Maven dependencies
+        uses: actions/cache@v4
+        with:
+          path: ${{ env.MAVEN_REPO }}
+          # key：pom.xml hash 变化 → 清除缓存重新拉依赖；pom不变就复用
+          key: maven-repo-${{ hashFiles('pom.xml') }}
+          restore-keys: |
+            maven-repo-
+
+      # ========== 编译产物 target 缓存 ==========
+      - name: Cache target compiled classes
+        uses: actions/cache@v4
+        with:
+          path: target
+          # key：pom + 源码hash，源码改动才重新编译
+          key: maven-target-${{ hashFiles('pom.xml', 'src/**/*.java') }}
+          restore-keys: |
+            maven-target-
 
       - name: Prepare stock data directory
         run: mkdir -p "$STOCK_DATA_DIR"
@@ -33,7 +54,7 @@ jobs:
         run: |
           echo "Stock data dir: $STOCK_DATA_DIR"
           mkdir -p "$STOCK_DATA_DIR"
-          # 先 compile 再 exec:java（exec:java 不会自动编译，否则 target/classes 为空会 ClassNotFound）
+          # -B batch模式；compile 检测class是否新于源码，无变更直接跳过编译
           mvn -B compile exec:java -Dexec.mainClass="com.cary.core.restapi.service.StockCollectService" -Dexec.args=""
 
       - name: git add and commit changes
@@ -41,7 +62,6 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add .
-          # 无数据变更时跳过提交与推送，避免工作流报错
           if git diff --cached --quiet; then
             echo "No stock data changes, skip commit and push."
             exit 0
