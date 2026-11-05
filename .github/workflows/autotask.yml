@@ -18,53 +18,73 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: Set up JDK 17
-        uses: actions/setup-java@v4
+        uses: actions/setup-java@v5
         with:
           java-version: '17'
           distribution: 'temurin'
-          # 这里关掉内置 maven cache，我们自己用 actions/cache 精细控制
-          cache: none
+          # ✅ 删掉 cache: none，v5 不支持，不写就是关闭内置缓存
 
-      # ========== Maven 依赖缓存 ==========
-      - name: Cache Maven dependencies
-        uses: actions/cache@v4
-        with:
-          path: ${{ env.MAVEN_REPO }}
-          # key：pom.xml hash 变化 → 清除缓存重新拉依赖；pom不变就复用
-          key: maven-repo-${{ hashFiles('pom.xml') }}
-          restore-keys: |
-            maven-repo-
-
-      # ========== 编译产物 target 缓存 ==========
-      - name: Cache target compiled classes
-        uses: actions/cache@v4
-        with:
-          path: target
-          # key：pom + 源码hash，源码改动才重新编译
-          key: maven-target-${{ hashFiles('pom.xml', 'src/**/*.java') }}
-          restore-keys: |
-            maven-target-
-
-      - name: Prepare stock data directory
-        run: mkdir -p "$STOCK_DATA_DIR"
-
-      - name: Run StockCollectService main method
-        env:
-          DINGTALK_WEBHOOK_URL: ${{ secrets.DINGTALK_WEBHOOK_URL }}
+      # 阿里云Maven镜像，国内加速
+      - name: Config maven aliyun mirror
         run: |
-          echo "Stock data dir: $STOCK_DATA_DIR"
-          mkdir -p "$STOCK_DATA_DIR"
-          # -B batch模式；compile 检测class是否新于源码，无变更直接跳过编译
-          mvn -B compile exec:java -Dexec.mainClass="com.cary.core.restapi.service.StockCollectService" -Dexec.args=""
+          mkdir -p ~/.m2
+          cat > ~/.m2/settings.xml <<EOF
+  <settings>
+  <mirrors>
+  <mirror>
+  <id>aliyunmaven</id>
+  <mirrorOf>central</mirrorOf>
+  <name>阿里云公共仓库</name>
+  <url>https://maven.aliyun.com/repository/public</url>
+  </mirror>
+  </mirrors>
+  </settings>
+  EOF
 
-      - name: git add and commit changes
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add .
-          if git diff --cached --quiet; then
-            echo "No stock data changes, skip commit and push."
-            exit 0
-          fi
-          git commit -m "Auto task for stock data"
-          git push
+  # Maven依赖缓存
+  - name: Cache Maven dependencies
+    uses: actions/cache@v4
+    with:
+      path: ${{ env.MAVEN_REPO }}
+      key: maven-repo-${{ hashFiles('pom.xml') }}
+      restore-keys: |
+        maven-repo-
+
+  # target编译产物缓存
+  - name: Cache target compiled classes
+    uses: actions/cache@v4
+    with:
+      path: target
+      key: maven-target-${{ hashFiles('pom.xml', 'src/**/*.java') }}
+      restore-keys: |
+        maven-target-
+
+  - name: Prepare stock data directory
+    run: mkdir -p "$STOCK_DATA_DIR"
+
+  - name: Run StockCollectService main method
+    env:
+      DINGTALK_WEBHOOK_URL: ${{ secrets.DINGTALK_WEBHOOK_URL }}
+    run: |
+      echo "Stock data dir: $STOCK_DATA_DIR"
+      mkdir -p "$STOCK_DATA_DIR"
+      # 缓存存在就离线跑，不走网络；缺失则联网下载依赖
+      if [ -d "$MAVEN_REPO" ] && [ "$(ls -A $MAVEN_REPO)" ]; then
+        echo "✅ Cache hit, run maven offline"
+        mvn -B -T 1C --offline compile exec:java -Dexec.mainClass="com.cary.core.restapi.service.StockCollectService" -Dexec.args=""
+      else
+        echo "⚠️ Cache miss, download dependencies online"
+        mvn -B -T 1C compile exec:java -Dexec.mainClass="com.cary.core.restapi.service.StockCollectService" -Dexec.args=""
+      fi
+
+  - name: git add and commit changes
+    run: |
+      git config user.name "github-actions[bot]"
+      git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+      git add .
+      if git diff --cached --quiet; then
+        echo "No stock data changes, skip commit and push."
+        exit 0
+      fi
+      git commit -m "Auto task for stock data"
+      git push
